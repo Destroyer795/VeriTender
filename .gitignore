@@ -1,0 +1,24 @@
+# Python internals
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment (Very Important)
+venv/
+env/
+.env
+
+# Database (Don't commit real data)
+*.db
+*.sqlite3
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# VS Code settings (optional, but good for teams)
+.vscode/
+
+# Environment variables & Secrets
+config.py
+secrets.json
