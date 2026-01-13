@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="alert alert-success">
+        <h4>Authentication Successful</h4>
+        <p>Welcome, <strong>{{ user }}</strong>. Your identity has been verified via NIST-compliant MFA.</p>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-dark text-white">Active Tenders</div>
+                <div class="card-body">
+                    <p>Securely submit your encrypted bids here.</p>
+                    <a href="/submit_bid" class="btn btn-primary">Submit Sealed Bid</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">Audit Logs</div>
+                <div class="card-body">
+                    <p>View immutable history of all system actions.</p>
+                    <a href="#" class="btn btn-outline-dark">View Logs</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

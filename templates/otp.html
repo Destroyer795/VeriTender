@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-4">
+        <div class="card shadow">
+            <div class="card-header bg-warning text-dark text-center">
+                <h4>Two-Factor Authentication</h4>
+            </div>
+            <div class="card-body text-center">
+                <p>We sent a 6-digit code to your email.</p>
+                <p class="text-muted small">Check your spam folder if you don't see it.</p>
+                
+                {% if error %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+                {% endif %}
+
+                <form action="/verify_mfa" method="post">
+                    <div class="mb-3">
+                        <input type="text" class="form-control text-center fs-4 letter-spacing-2" 
+                               name="otp" placeholder="000000" maxlength="6" required autofocus>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-dark">Verify Login</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
