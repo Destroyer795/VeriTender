@@ -1,32 +1,123 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="alert alert-success">
-        <h4>Authentication Successful</h4>
-        <p>Welcome, <strong>{{ user }}</strong>. Your identity has been verified via NIST-compliant MFA.</p>
+<div class="container mt-5">
+    
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2>Welcome, {{ user }}!</h2>
+            <p class="text-muted">
+                Role: <span class="badge bg-secondary">{{ role | upper }}</span>
+            </p>
+        </div>
     </div>
 
-    <div class="row mt-4">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header bg-dark text-white">Active Tenders</div>
+    {% if role == 'contractor' %}
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">📜 Active Tenders</h5>
+                </div>
                 <div class="card-body">
-                    <p>Securely submit your encrypted bids here.</p>
-                    <a href="/submit_bid" class="btn btn-primary">Submit Sealed Bid</a>
+                    <p class="card-text">Road Construction Project - NH47</p>
+                    <p class="text-muted small">Status: Open for Bidding</p>
+                    <a href="/submit_bid" class="btn btn-primary w-100">Submit Sealed Bid 🔒</a>
                 </div>
             </div>
         </div>
-        
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header bg-secondary text-white">Audit Logs</div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">✅ Submission Receipt</h5>
+                </div>
                 <div class="card-body">
-                    <p>View immutable history of all system actions.</p>
-                    <a href="#" class="btn btn-outline-dark">View Logs</a>
+                    {% if request.query_params.get('status') == 'bid_sealed' %}
+                        <div class="alert alert-success small py-2 mb-3">
+                            <strong>Bid Sealed & Submitted.</strong>
+                        </div>
+
+                        <label class="form-label small text-muted fw-bold">
+                            <i class="bi bi-receipt"></i> Digital Proof of Submission
+                        </label>
+                        
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control font-monospace small text-primary bg-light" 
+                                   value="{{ receipt_string }}" 
+                                   id="receiptString" readonly>
+                            <button class="btn btn-outline-secondary" onclick="copyReceipt()" title="Copy">
+                                <i class="bi bi-clipboard"></i>
+                            </button>
+                        </div>
+                        
+                        <hr>
+                        
+                        <form action="/decode_receipt" method="post" target="decode_frame">
+                            <input type="hidden" name="encoded_string" value="{{ receipt_string }}">
+                            <button type="submit" class="btn btn-sm btn-outline-dark w-100">
+                                Verify Receipt Integrity
+                            </button>
+                        </form>
+                        
+                        <iframe name="decode_frame" style="width:100%; height:60px; border:none; margin-top:5px;"></iframe>
+
+                    {% else %}
+                        <p class="text-muted small text-center mt-4">
+                            You have not submitted a bid in this session yet.
+                        </p>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
+    {% endif %}
+
+    {% if role == 'auditor' %}
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">🚨 System Oversight</h5>
+                </div>
+                <div class="card-body text-center">
+                    <h4>Audit Control Center</h4>
+                    <p class="text-muted">View immutable history of all system actions.</p>
+                    <a href="/audit_logs" class="btn btn-danger btn-lg">
+                        <i class="bi bi-eye-fill"></i> Access Audit Logs
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if role == 'official' %}
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">🏛️ Government Control</h5>
+                </div>
+                <div class="card-body text-center">
+                    <h4>Tender Review Console</h4>
+                    <p class="text-muted">Decrypt and process sealed contractor bids.</p>
+                    <a href="/official_dashboard" class="btn btn-warning btn-lg">
+                        Go to Official Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
 </div>
+
+<script>
+function copyReceipt() {
+    var copyText = document.getElementById("receiptString");
+    copyText.select();
+    document.execCommand("copy");
+}
+</script>
 {% endblock %}

@@ -7,3 +7,4 @@ bcrypt
 qrcode
 pillow
 sqlalchemy
+itsdangerous

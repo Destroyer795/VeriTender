@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>🏛️ Official Tender Review</h2>
+        <span class="badge bg-danger">Restricted Access: Officials Only</span>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-header bg-dark text-white">
+            Received Sealed Bids
+        </div>
+        <div class="card-body">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Bid ID</th>
+                        <th>Bidder (Encrypted ID)</th>
+                        <th>Submission Time</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for bid in bids %}
+                    <tr>
+                        <td>#{{ bid.id }}</td>
+                        <td>User ID: {{ bid.user_id }}</td>
+                        <td>{{ bid.timestamp }}</td>
+                        <td>
+                            {% if bid.status == 'OPENED' %}
+                                <span class="badge bg-success">Decrypted</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">Sealed 🔒</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if bid.status == 'OPENED' %}
+                                <strong>{{ bid.decrypted_amount }}</strong>
+                            {% else %}
+                                <form action="/decrypt_bid" method="post" class="d-inline">
+                                    <input type="hidden" name="bid_id" value="{{ bid.id }}">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                                        🔓 Decrypt & Verify Signature
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -2,17 +2,69 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VeriTender | Secure Govt Auction</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <script>
+    // Prevent back button caching issues for sensitive pages
+    // Source: https://developer.mozilla.org/en-US/docs/Web/API/Window/pageshow_event
+    // and https://stackoverflow.com/questions/391979/how-to-prevent-browser-back-button-from-loading-cached-page
+    // This forces a reload when navigating back to the page
+    window.addEventListener( "pageshow", function ( event ) {
+      var historyTraversal = event.persisted || 
+                             ( typeof window.performance != "undefined" && 
+                                  window.performance.navigation.type === 2 );
+      if ( historyTraversal ) {
+        window.location.reload();
+      }
+    });
+    </script>
 </head>
 <body class="bg-light">
-    <nav class="navbar navbar-dark bg-primary shadow-sm">
+
+    {% if not hide_navbar %}
+    <nav class="navbar navbar-dark bg-dark shadow-sm mb-4">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="/">VeriTender</a>
+            <a class="navbar-brand fw-bold" href="/">
+                <i class="bi bi-shield-lock-fill"></i> VeriTender
+            </a>
+            
+            <div class="d-flex">
+                {% if user %}
+                    <span class="navbar-text text-light me-3 small">
+                        Logged in as: <strong>{{ user }}</strong>
+                        {% if role %}
+                        <span class="badge bg-secondary ms-1">{{ role | upper }}</span>
+                        {% endif %}
+                    </span>
+                    
+                    <a href="/dashboard" class="btn btn-outline-light btn-sm me-2">Home</a>
+
+                    {% if role == 'contractor' %}
+                        <a href="/submit_bid" class="btn btn-primary btn-sm me-2">New Bid ➕</a>
+                    {% endif %}
+
+                    {% if role == 'official' %}
+                        <a href="/official_dashboard" class="btn btn-warning btn-sm me-2">Tender Console 🏛️</a>
+                    {% endif %}
+
+                    {% if role == 'auditor' %}
+                        <a href="/audit_logs" class="btn btn-danger btn-sm me-2">Audit Logs 🚨</a>
+                    {% endif %}
+                    
+                    <a href="/logout" class="btn btn-danger btn-sm">Logout</a>
+                {% else %}
+                    <a href="/login" class="btn btn-outline-light btn-sm me-2">Login</a>
+                    <a href="/register" class="btn btn-primary btn-sm">Register</a>
+                {% endif %}
+            </div>
         </div>
     </nav>
-    <div class="container mt-4">
+    {% endif %}
+    <div class="container">
         {% block content %}{% endblock %}
     </div>
+
 </body>
 </html>

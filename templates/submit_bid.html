@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">🔒 Secure Bid Submission</h4>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        Your bid will be <strong>AES-256 encrypted</strong> and digitally signed. 
+                        Even the administrator cannot view it until the deadline.
+                    </p>
+
+                    <form action="/submit_bid" method="post">
+                        <div class="mb-3">
+                            <label class="form-label">Select Tender Project</label>
+                            <select class="form-select" name="project_name">
+                                <option>Road Construction - NH47</option>
+                                <option>School Renovation - Block A</option>
+                                <option>Smart City Traffic Lights</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Bid Amount (USD)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" name="amount" placeholder="50000" required>
+                            </div>
+                            <div class="form-text text-success">
+                                <i class="bi bi-shield-lock"></i> Encryption Active
+                            </div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">Seal & Submit Bid</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
