@@ -57,7 +57,8 @@ async def login_submit(request: Request, username: str = Form(...), password: st
     if not user or not verify_password(password, user['password_hash']):
         return templates.TemplateResponse("login.html", {
             "request": request, 
-            "error": "Invalid Credentials"
+            "error": "Invalid Credentials",
+            "hide_navbar": True
         })
 
     # Log successful password verification
@@ -98,7 +99,8 @@ async def mfa_submit(request: Request, otp: str = Form(...)):
     if otp != correct_otp:
         return templates.TemplateResponse("otp.html", {
             "request": request, 
-            "error": "Incorrect Code. Please try again."
+            "error": "Incorrect Code. Please try again.",
+            "hide_navbar": True
         })
 
     # Log successful MFA verification
@@ -140,7 +142,8 @@ async def register_submit(
     if len(password) < 8:
         return templates.TemplateResponse("register.html", {
             "request": request, 
-            "error": "Password is too weak. Must be at least 8 characters."
+            "error": "Password is too weak. Must be at least 8 characters.",
+            "hide_navbar": True
         })
 
     hashed_pw, salt = hash_password(password)
@@ -156,7 +159,8 @@ async def register_submit(
         conn.close()
         return templates.TemplateResponse("register.html", {
             "request": request, 
-            "error": "Username or Email already exists."
+            "error": "Username or Email already exists.",
+            "hide_navbar": True
         })
     
     conn.close()
