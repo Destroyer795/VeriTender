@@ -1,71 +1,109 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mt-5">
+<div class="container mt-4">
     
-    <div class="row mb-4">
+    <!-- Welcome Header -->
+    <div class="row mb-4 fade-in-up">
         <div class="col-md-12">
-            <h2>Welcome, {{ user }}!</h2>
-            <p class="text-muted">
-                Role: <span class="badge bg-secondary">{{ role | upper }}</span>
-            </p>
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <h2 class="fw-bold mb-1" style="color: #1e293b;">Welcome back, {{ user }}!</h2>
+                    <p class="text-muted mb-0">
+                        <span class="badge-modern badge-primary">
+                            <i class="bi bi-person-badge me-1"></i>{{ role | upper }}
+                        </span>
+                    </p>
+                </div>
+                <div class="icon-wrapper icon-primary d-none d-md-flex">
+                    <i class="bi bi-speedometer2"></i>
+                </div>
+            </div>
         </div>
     </div>
 
     {% if role == 'contractor' %}
     <div class="row">
-        <div class="col-md-6 mb-4">
-            <div class="card shadow h-100">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">📜 Active Tenders</h5>
+        <!-- Active Tenders Card -->
+        <div class="col-md-6 mb-4 fade-in-up delay-1">
+            <div class="card-modern h-100">
+                <div class="card-header-modern card-header-primary d-flex align-items-center justify-content-between">
+                    <h5 class="mb-0 d-flex align-items-center">
+                        <i class="bi bi-file-earmark-text me-2"></i>Active Tenders
+                    </h5>
+                    <span class="badge bg-white text-primary" style="font-size: 0.7rem;">LIVE</span>
                 </div>
-                <div class="card-body">
-                    <p class="card-text">Road Construction Project - NH47</p>
-                    <p class="text-muted small">Status: Open for Bidding</p>
-                    <a href="/submit_bid" class="btn btn-primary w-100">Submit Sealed Bid 🔒</a>
+                <div class="card-body-modern">
+                    <div class="d-flex align-items-start mb-3">
+                        <div class="icon-wrapper icon-primary me-3">
+                            <i class="bi bi-cone-striped"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-1 fw-semibold">Road Construction Project - NH47</h6>
+                            <span class="badge-modern badge-success">
+                                <i class="bi bi-unlock me-1"></i>Open for Bidding
+                            </span>
+                        </div>
+                    </div>
+                    <hr class="my-3">
+                    <a href="/submit_bid" class="btn btn-modern-primary w-100">
+                        <i class="bi bi-lock me-2"></i>Submit Sealed Bid
+                    </a>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-6 mb-4">
-            <div class="card shadow h-100">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0">✅ Submission Receipt</h5>
+        <!-- Submission Receipt Card -->
+        <div class="col-md-6 mb-4 fade-in-up delay-2">
+            <div class="card-modern h-100">
+                <div class="card-header-modern card-header-success d-flex align-items-center justify-content-between">
+                    <h5 class="mb-0 d-flex align-items-center">
+                        <i class="bi bi-check-circle me-2"></i>Submission Receipt
+                    </h5>
+                    <span class="badge bg-white text-success" style="font-size: 0.7rem;">VERIFIED</span>
                 </div>
-                <div class="card-body">
+                <div class="card-body-modern">
                     {% if request.query_params.get('status') == 'bid_sealed' %}
-                        <div class="alert alert-success small py-2 mb-3">
-                            <strong>Bid Sealed & Submitted.</strong>
+                        <div class="alert-modern alert-success-modern mb-3">
+                            <i class="bi bi-shield-check me-2"></i>
+                            <strong>Bid successfully sealed & submitted!</strong>
                         </div>
 
-                        <label class="form-label small text-muted fw-bold">
-                            <i class="bi bi-receipt"></i> Digital Proof of Submission
+                        <label class="form-label small text-muted fw-semibold mb-2">
+                            <i class="bi bi-fingerprint me-1"></i>Digital Proof of Submission
                         </label>
                         
                         <div class="input-group mb-3">
-                            <input type="text" class="form-control font-monospace small text-primary bg-light" 
+                            <input type="text" class="form-control font-monospace small" 
                                    value="{{ receipt_string }}" 
-                                   id="receiptString" readonly>
-                            <button class="btn btn-outline-secondary" onclick="copyReceipt()" title="Copy">
+                                   id="receiptString" readonly
+                                   style="background: #f9fafb; color: #0f766e; font-size: 0.8rem;">
+                            <button class="btn btn-outline-secondary" onclick="copyReceipt()" title="Copy to clipboard">
                                 <i class="bi bi-clipboard"></i>
                             </button>
                         </div>
                         
-                        <hr>
+                        <hr class="my-3">
                         
                         <form action="/decode_receipt" method="post" target="decode_frame">
                             <input type="hidden" name="encoded_string" value="{{ receipt_string }}">
-                            <button type="submit" class="btn btn-sm btn-outline-dark w-100">
-                                Verify Receipt Integrity
+                            <button type="submit" class="btn btn-outline-secondary w-100">
+                                <i class="bi bi-qr-code-scan me-2"></i>Verify Receipt Integrity
                             </button>
                         </form>
                         
-                        <iframe name="decode_frame" style="width:100%; height:60px; border:none; margin-top:5px;"></iframe>
+                        <iframe name="decode_frame" style="width:100%; height:60px; border:none; margin-top:10px; border-radius: 8px;"></iframe>
 
                     {% else %}
-                        <p class="text-muted small text-center mt-4">
-                            You have not submitted a bid in this session yet.
-                        </p>
+                        <div class="text-center py-4">
+                            <div class="icon-wrapper icon-success mx-auto mb-3" style="width: 64px; height: 64px; font-size: 1.5rem;">
+                                <i class="bi bi-inbox"></i>
+                            </div>
+                            <p class="text-muted mb-0">
+                                No bid submitted in this session yet.<br>
+                                <small>Submit a bid to see your receipt here.</small>
+                            </p>
+                        </div>
                     {% endif %}
                 </div>
             </div>
@@ -74,17 +112,23 @@
     {% endif %}
 
     {% if role == 'auditor' %}
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow border-danger">
-                <div class="card-header bg-danger text-white">
-                    <h5 class="mb-0">🚨 System Oversight</h5>
+    <div class="row justify-content-center fade-in-up delay-1">
+        <div class="col-md-8 col-lg-6">
+            <div class="card-modern">
+                <div class="card-header-modern card-header-danger d-flex align-items-center justify-content-between">
+                    <h5 class="mb-0 d-flex align-items-center">
+                        <i class="bi bi-shield-exclamation me-2"></i>System Oversight
+                    </h5>
+                    <span class="badge bg-white text-danger" style="font-size: 0.7rem;">RESTRICTED</span>
                 </div>
-                <div class="card-body text-center">
-                    <h4>Audit Control Center</h4>
-                    <p class="text-muted">View immutable history of all system actions.</p>
-                    <a href="/audit_logs" class="btn btn-danger btn-lg">
-                        <i class="bi bi-eye-fill"></i> Access Audit Logs
+                <div class="card-body-modern text-center py-5">
+                    <div class="icon-wrapper icon-danger mx-auto mb-4" style="width: 80px; height: 80px; font-size: 2rem;">
+                        <i class="bi bi-eye"></i>
+                    </div>
+                    <h4 class="fw-bold mb-2">Audit Control Center</h4>
+                    <p class="text-muted mb-4">View the immutable history of all system actions and maintain oversight.</p>
+                    <a href="/audit_logs" class="btn btn-modern-danger btn-lg px-5">
+                        <i class="bi bi-journal-text me-2"></i>Access Audit Logs
                     </a>
                 </div>
             </div>
@@ -93,17 +137,23 @@
     {% endif %}
 
     {% if role == 'official' %}
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow border-warning">
-                <div class="card-header bg-warning text-dark">
-                    <h5 class="mb-0">🏛️ Government Control</h5>
+    <div class="row justify-content-center fade-in-up delay-1">
+        <div class="col-md-8 col-lg-6">
+            <div class="card-modern">
+                <div class="card-header-modern card-header-warning d-flex align-items-center justify-content-between">
+                    <h5 class="mb-0 d-flex align-items-center">
+                        <i class="bi bi-building me-2"></i>Government Control
+                    </h5>
+                    <span class="badge bg-white text-warning" style="font-size: 0.7rem; color: #b45309 !important;">OFFICIALS</span>
                 </div>
-                <div class="card-body text-center">
-                    <h4>Tender Review Console</h4>
-                    <p class="text-muted">Decrypt and process sealed contractor bids.</p>
-                    <a href="/official_dashboard" class="btn btn-warning btn-lg">
-                        Go to Official Dashboard
+                <div class="card-body-modern text-center py-5">
+                    <div class="icon-wrapper icon-warning mx-auto mb-4" style="width: 80px; height: 80px; font-size: 2rem;">
+                        <i class="bi bi-bank"></i>
+                    </div>
+                    <h4 class="fw-bold mb-2">Tender Review Console</h4>
+                    <p class="text-muted mb-4">Decrypt and process sealed contractor bids with full verification.</p>
+                    <a href="/official_dashboard" class="btn btn-modern-warning btn-lg px-5">
+                        <i class="bi bi-unlock me-2"></i>Open Dashboard
                     </a>
                 </div>
             </div>
@@ -118,6 +168,19 @@ function copyReceipt() {
     var copyText = document.getElementById("receiptString");
     copyText.select();
     document.execCommand("copy");
+    
+    // Visual feedback
+    const btn = event.target.closest('button');
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = '<i class="bi bi-check"></i>';
+    btn.classList.add('btn-success');
+    btn.classList.remove('btn-outline-secondary');
+    
+    setTimeout(() => {
+        btn.innerHTML = originalHTML;
+        btn.classList.remove('btn-success');
+        btn.classList.add('btn-outline-secondary');
+    }, 2000);
 }
 </script>
 {% endblock %}

@@ -1,42 +1,69 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mt-5">
+<div class="container mt-4">
     <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card shadow-lg border-primary">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">🔒 Secure Bid Submission</h4>
+        <div class="col-md-7 col-lg-6">
+            <div class="card-modern fade-in-up">
+                <div class="card-header-modern card-header-primary">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <h4 class="mb-0 d-flex align-items-center">
+                            <i class="bi bi-lock me-2"></i>Secure Bid Submission
+                        </h4>
+                        <span class="badge bg-white text-primary" style="font-size: 0.7rem;">ENCRYPTED</span>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <p class="text-muted">
-                        Your bid will be <strong>AES-256 encrypted</strong> and digitally signed. 
-                        Even the administrator cannot view it until the deadline.
-                    </p>
+                <div class="card-body-modern">
+                    <!-- Security Info -->
+                    <div class="alert-modern alert-success-modern mb-4">
+                        <div class="d-flex align-items-start">
+                            <div class="icon-wrapper icon-success me-3" style="width: 40px; height: 40px; min-width: 40px;">
+                                <i class="bi bi-shield-check"></i>
+                            </div>
+                            <div>
+                                <strong class="d-block mb-1">End-to-End Encryption</strong>
+                                <small>Your bid is protected with <strong>AES-256 encryption</strong> and digitally signed. Not even administrators can view it until the deadline.</small>
+                            </div>
+                        </div>
+                    </div>
 
                     <form action="/submit_bid" method="post">
-                        <div class="mb-3">
-                            <label class="form-label">Select Tender Project</label>
+                        <div class="mb-4">
+                            <label class="form-label">
+                                <i class="bi bi-folder me-1"></i>Select Tender Project
+                            </label>
                             <select class="form-select" name="project_name">
-                                <option>Road Construction - NH47</option>
-                                <option>School Renovation - Block A</option>
-                                <option>Smart City Traffic Lights</option>
+                                <option value="Road Construction - NH47">Road Construction - NH47</option>
+                                <option value="School Renovation - Block A">School Renovation - Block A</option>
+                                <option value="Smart City Traffic Lights">Smart City Traffic Lights</option>
                             </select>
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">Bid Amount (USD)</label>
+                        <div class="mb-4">
+                            <label class="form-label">
+                                <i class="bi bi-currency-dollar me-1"></i>Bid Amount (USD)
+                            </label>
                             <div class="input-group">
-                                <span class="input-group-text">$</span>
-                                <input type="number" class="form-control" name="amount" placeholder="50000" required>
+                                <span class="input-group-text" style="background: #f8fafc; border: 2px solid var(--border-color); border-right: none; border-radius: 10px 0 0 10px;">
+                                    <i class="bi bi-currency-dollar"></i>
+                                </span>
+                                <input type="number" class="form-control" name="amount" placeholder="50,000" required
+                                       style="border-left: none; border-radius: 0 10px 10px 0;">
                             </div>
-                            <div class="form-text text-success">
-                                <i class="bi bi-shield-lock"></i> Encryption Active
+                            <div class="form-text d-flex align-items-center mt-2">
+                                <span class="badge-modern badge-primary me-2">
+                                    <i class="bi bi-lock-fill me-1"></i>Protected
+                                </span>
+                                <small class="text-muted">Your bid amount is encrypted before transmission</small>
                             </div>
                         </div>
 
+                        <hr class="my-4">
+
                         <div class="d-grid">
-                            <button type="submit" class="btn btn-primary btn-lg">Seal & Submit Bid</button>
+                            <button type="submit" class="btn btn-modern-primary btn-lg">
+                                <i class="bi bi-send-check me-2"></i>Seal & Submit Bid
+                            </button>
                         </div>
                     </form>
                 </div>

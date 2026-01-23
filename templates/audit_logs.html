@@ -2,35 +2,81 @@
 
 {% block content %}
 <div class="container mt-4">
-    <div class="card shadow border-danger">
-        <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
-            <h4 class="mb-0">🚨 System Audit Logs</h4>
-            <span class="badge bg-light text-danger">Immutable History</span>
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 fade-in-up">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: #1e293b;">
+                <i class="bi bi-shield-exclamation me-2"></i>System Audit Logs
+            </h2>
+            <p class="text-muted mb-0">Complete immutable history of all system actions</p>
         </div>
-        <div class="card-body">
-            <table class="table table-striped table-hover table-bordered">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Log ID</th>
-                        <th>Timestamp</th>
-                        <th>User</th>
-                        <th>Action Description</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for log in logs %}
-                    <tr>
-                        <td>#{{ log.id }}</td>
-                        <td class="text-muted small">{{ log.timestamp }}</td>
-                        <td class="fw-bold">{{ log.username }}</td>
-                        <td class="font-monospace text-primary">{{ log.event }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <span class="badge-modern badge-danger">
+            <i class="bi bi-fingerprint me-1"></i>Immutable Records
+        </span>
+    </div>
+
+    <!-- Audit Logs Card -->
+    <div class="card-modern fade-in-up delay-1">
+        <div class="card-header-modern card-header-danger d-flex align-items-center justify-content-between">
+            <h5 class="mb-0 d-flex align-items-center">
+                <i class="bi bi-journal-text me-2"></i>Activity History
+            </h5>
+            <span class="badge bg-white text-danger" style="font-size: 0.7rem;">
+                {{ logs | length }} Records
+            </span>
         </div>
-        <div class="card-footer text-muted text-center">
-             Report generated for Auditor: <strong>{{ user }}</strong>
+        <div class="card-body-modern p-0">
+            <div class="table-responsive">
+                <table class="table table-modern mb-0">
+                    <thead>
+                        <tr>
+                            <th>Log ID</th>
+                            <th>Timestamp</th>
+                            <th>User</th>
+                            <th>Action Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs %}
+                        <tr>
+                            <td>
+                                <span class="fw-semibold text-danger">#{{ log.id }}</span>
+                            </td>
+                            <td class="text-muted">
+                                <i class="bi bi-clock me-1"></i>{{ log.timestamp }}
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="icon-wrapper icon-primary me-2" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                                        {{ log.username[0] | upper }}
+                                    </div>
+                                    <span class="fw-semibold">{{ log.username }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <code style="background: rgba(15, 118, 110, 0.1); color: #0f766e; padding: 0.25rem 0.5rem; border-radius: 6px; font-size: 0.85rem;">
+                                    {{ log.event }}
+                                </code>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center py-5">
+                                <div class="icon-wrapper icon-danger mx-auto mb-3" style="width: 64px; height: 64px; font-size: 1.5rem;">
+                                    <i class="bi bi-inbox"></i>
+                                </div>
+                                <p class="text-muted mb-0">No audit logs available</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-transparent text-center py-3" style="border-top: 1px solid var(--border-color);">
+            <span class="text-muted">
+                <i class="bi bi-person-badge me-1"></i>Report generated for Auditor: <strong>{{ user }}</strong>
+            </span>
         </div>
     </div>
 </div>

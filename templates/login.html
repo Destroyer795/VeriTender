@@ -2,34 +2,48 @@
 
 {% block content %}
 <div class="row justify-content-center mt-5">
-    <div class="col-md-4">
-        <div class="card shadow">
-            <div class="card-header bg-primary text-white text-center">
-                <h4>VeriTender Login</h4>
+    <div class="col-md-5 col-lg-4">
+        <div class="card-modern fade-in-up">
+            <div class="card-header-modern card-header-primary text-center">
+                <div class="icon-wrapper mx-auto mb-3" style="background: rgba(255,255,255,0.2); width: 56px; height: 56px;">
+                    <i class="bi bi-shield-lock text-white" style="font-size: 1.5rem;"></i>
+                </div>
+                <h4 class="mb-1">Welcome Back</h4>
+                <p class="mb-0 opacity-75" style="font-size: 0.9rem;">Sign in to VeriTender</p>
             </div>
-            <div class="card-body">
+            <div class="card-body-modern">
                 {% if error %}
-                <div class="alert alert-danger" role="alert">
-                    {{ error }}
+                <div class="alert-modern alert-danger-modern mb-4" role="alert">
+                    <i class="bi bi-exclamation-triangle me-2"></i>{{ error }}
                 </div>
                 {% endif %}
 
                 <form action="/login" method="post" autocomplete="off">
                     <div class="mb-3">
-                        <label for="username" class="form-label">Username</label>
-                        <input type="text" class="form-control" id="username" name="username" required>
+                        <label for="username" class="form-label">
+                            <i class="bi bi-person me-1"></i>Username
+                        </label>
+                        <input type="text" class="form-control" id="username" name="username" 
+                               placeholder="Enter your username" required>
                     </div>
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="password" name="password" required>
+                    <div class="mb-4">
+                        <label for="password" class="form-label">
+                            <i class="bi bi-key me-1"></i>Password
+                        </label>
+                        <input type="password" class="form-control" id="password" name="password" 
+                               placeholder="Enter your password" required>
                     </div>
                     <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">Proceed to MFA ➡️</button>
+                        <button type="submit" class="btn btn-modern-primary btn-lg">
+                            Proceed to MFA
+                            <i class="bi bi-arrow-right ms-2"></i>
+                        </button>
                     </div>
                 </form>
             </div>
-            <div class="card-footer text-center">
-                <a href="/register">Don't have an account? Register</a>
+            <div class="card-footer bg-transparent text-center py-3" style="border-top: 1px solid var(--border-color);">
+                <span class="text-muted">Don't have an account?</span>
+<a href="/register" class="ms-1 fw-semibold" style="color: #0f766e; text-decoration: none;">Register</a>
             </div>
         </div>
     </div>
