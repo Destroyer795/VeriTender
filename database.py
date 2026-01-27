@@ -21,7 +21,7 @@ def init_db():
     conn = get_db_connection()
     c = conn.cursor()
     
-    # --- TABLE 1: USERS ---
+    # TABLE 1: USERS
     # Stores user credentials and roles.
     # We store 'salt' explicitly to satisfy Rubric Point 4 (Hashing with Salt).
     c.execute('''
@@ -35,7 +35,7 @@ def init_db():
         )
     ''')
     
-    # --- TABLE 2: BIDS (The Vault) ---
+    # TABLE 2: BIDS (The Vault)
     # Stores the encrypted bids.
     # Note the specific columns for Hybrid Encryption components.
     c.execute('''
@@ -51,7 +51,7 @@ def init_db():
         )
     ''')
 
-    # --- TABLE 3: AUDIT LOGS ---
+    # TABLE 3: AUDIT LOGS
     # Required for the "Auditor" role to have something unique to access.
     c.execute('''
         CREATE TABLE IF NOT EXISTS audit_logs (

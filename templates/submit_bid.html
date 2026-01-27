@@ -14,7 +14,6 @@
                     </div>
                 </div>
                 <div class="card-body-modern">
-                    <!-- Security Info -->
                     <div class="alert-modern alert-success-modern mb-4">
                         <div class="d-flex align-items-start">
                             <div class="icon-wrapper icon-success me-3" style="width: 40px; height: 40px; min-width: 40px;">
@@ -22,7 +21,7 @@
                             </div>
                             <div>
                                 <strong class="d-block mb-1">End-to-End Encryption</strong>
-                                <small>Your bid is protected with <strong>AES-256 encryption</strong> and digitally signed. Not even administrators can view it until the deadline.</small>
+                                <small>Your bid is protected with <strong>AES-256 encryption</strong>. Not even administrators can view it until the deadline.</small>
                             </div>
                         </div>
                     </div>
@@ -32,11 +31,18 @@
                             <label class="form-label">
                                 <i class="bi bi-folder me-1"></i>Select Tender Project
                             </label>
-                            <select class="form-select" name="project_name">
-                                <option value="Road Construction - NH47">Road Construction - NH47</option>
-                                <option value="School Renovation - Block A">School Renovation - Block A</option>
-                                <option value="Smart City Traffic Lights">Smart City Traffic Lights</option>
+                            
+                            <select class="form-select" name="project_name" required>
+                                <option value="" selected disabled>-- Choose an Open Tender --</option>
+                                {% for tender in tenders %}
+                                    <option value="{{ tender.title }}">
+                                        {{ tender.title }} - {{ tender.description }}
+                                    </option>
+                                {% else %}
+                                    <option value="" disabled>No active tenders available</option>
+                                {% endfor %}
                             </select>
+                            
                         </div>
 
                         <div class="mb-4">

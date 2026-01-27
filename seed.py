@@ -6,6 +6,27 @@ def seed_data():
     conn = get_db_connection()
     c = conn.cursor()
 
+    # TENDERS TABLE
+    # Stores the projects that contractors can bid on
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS tenders (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            description TEXT NOT NULL,
+            status TEXT DEFAULT 'OPEN',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    # Seed some dummy tenders if the table is empty
+    # This prevents duplicates if you run seed.py multiple times
+    check_tenders = c.execute("SELECT count(*) FROM tenders").fetchone()[0]
+    if check_tenders == 0:
+        c.execute("INSERT INTO tenders (title, description) VALUES ('City Road Repaving', 'Resurfacing of Main St and 1st Ave.')")
+        c.execute("INSERT INTO tenders (title, description) VALUES ('District School Renovation', 'Structural repairs for District 4 School.')")
+        c.execute("INSERT INTO tenders (title, description) VALUES ('Smart Traffic Lights', 'Installation of AI traffic system in downtown.')")
+        print("✅ Seeded initial tenders.")
+
     # The 3 Roles required by the Rubric
     users = [
         ("contractor", "contractor@example.com", "pass123", "contractor"),

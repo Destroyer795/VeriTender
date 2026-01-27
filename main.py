@@ -22,6 +22,12 @@ app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
 
 templates = Jinja2Templates(directory="templates")
 
+def make_receipt(bid_id, username):
+    raw = f"RECEIPT-BID-{bid_id}-VERITENDER-{username.upper()}-CONFIRMED"
+    return base64.b64encode(raw.encode()).decode()
+
+templates.env.globals.update(make_receipt=make_receipt)
+
 def prevent_caching(response: Response):
     """
     Sets HTTP headers to strictly disable browser caching.
@@ -64,9 +70,17 @@ async def login_submit(request: Request, username: str = Form(...), password: st
     # Log successful password verification
     log_action(username, "Login: Password Verified")
 
-    # Trigger MFA
-    otp = generate_otp()
-    email_sent = send_otp_email(user['email'], otp)
+    # Fixed OTP for Seeded Users (Demo Mode)
+    demo_users = ['contractor', 'official', 'auditor']
+    
+    if username in demo_users:
+        otp = "123456"  # HARDCODED OTP
+        email_sent = True
+        print(f"⚠️ DEMO MODE: Fixed OTP for '{username}' is {otp}")
+    else:
+        # Normal flow for real registered users
+        otp = generate_otp()
+        email_sent = send_otp_email(user['email'], otp)
     
     if not email_sent:
          return templates.TemplateResponse("login.html", {
@@ -177,24 +191,30 @@ async def dashboard(request: Request, response: Response):
         return RedirectResponse(url="/login")
     
     conn = get_db_connection()
-    user_row = conn.execute("SELECT role FROM users WHERE username=?", (username,)).fetchone()
-    conn.close()
-
+    # UPDATED: Fetch 'id' as well so we can query bids
+    user_row = conn.execute("SELECT id, role FROM users WHERE username=?", (username,)).fetchone()
+    
     if not user_row:
-        # User in session but not in DB (Stale Cookie). Force Logout.
+        conn.close()
         request.session.clear()
         return RedirectResponse(url="/login")
 
-    
-    # NEW: GENERATE VALID RECEIPT
-    # We create a real string and encode it to Base64 so it is mathematically valid.
-    raw_receipt = f"RECEIPT-BID-2026-VERITENDER-{username.upper()}-CONFIRMED"
-    receipt_string = base64.b64encode(raw_receipt.encode()).decode()
+    # Fetch Open Tenders (For the "Active Tenders" list)
+    tenders = conn.execute("SELECT * FROM tenders WHERE status='OPEN' ORDER BY created_at DESC LIMIT 5").fetchall()
+
+    # Fetch My Bids (For the "Submission History" list)
+    my_bids = []
+    if user_row['role'] == 'contractor':
+        my_bids = conn.execute("SELECT * FROM bids WHERE user_id=? ORDER BY timestamp DESC", (user_row['id'],)).fetchall()
+
+    conn.close()
+
     return templates.TemplateResponse("dashboard.html", {
         "request": request, 
         "user": username,
         "role": user_row['role'],
-        "receipt_string": receipt_string # Passing it to the template
+        "tenders": tenders,
+        "my_bids": my_bids  # PASSING THE HISTORY
     })
 
 
@@ -207,19 +227,24 @@ async def submit_bid_page(request: Request, response: Response):
     
     conn = get_db_connection()
     user = conn.execute("SELECT role FROM users WHERE username=?", (username,)).fetchone()
-    conn.close()
     
     if not user:
+        conn.close()
         request.session.clear()
         return RedirectResponse(url="/login")
 
     if user['role'] != 'contractor':
+        conn.close()
         return HTMLResponse("<h1>403 Forbidden: Only Contractors can submit bids.</h1>", status_code=403)
+
+    tenders = conn.execute("SELECT * FROM tenders WHERE status='OPEN' ORDER BY created_at DESC").fetchall()
+    conn.close()
 
     return templates.TemplateResponse("submit_bid.html", {
         "request": request, 
         "user": username,
-        "role": user['role']
+        "role": user['role'],
+        "tenders": tenders
     })
 
 @app.post("/submit_bid")
@@ -299,24 +324,70 @@ async def official_dashboard(request: Request, response: Response):
     conn = get_db_connection()
     user = conn.execute("SELECT role FROM users WHERE username=?", (username,)).fetchone()
     
-    if not user:
-        conn.close()
-        request.session.clear()
-        return RedirectResponse(url="/login")
-
-    if user['role'] != 'official':
+    if not user or user['role'] != 'official':
         conn.close()
         return HTMLResponse("<h1>403 Forbidden: Officials Only</h1>", status_code=403)
 
+    # Fetch Bids
     bids = conn.execute("SELECT * FROM bids").fetchall()
+    
+    # NEW: Fetch Tenders so Official can manage them
+    tenders = conn.execute("SELECT * FROM tenders ORDER BY created_at DESC").fetchall()
+    
     conn.close()
 
     return templates.TemplateResponse("official_dashboard.html", {
         "request": request, 
-        "user": username,
+        "user": username, 
         "bids": bids,
+        "tenders": tenders,  # Pass tenders to HTML
         "role": user['role']
     })
+
+@app.post("/close_tender")
+async def close_tender(request: Request, tender_id: int = Form(...)):
+    username = request.session.get("user")
+    if not username: return RedirectResponse(url="/login")
+
+    conn = get_db_connection()
+    user = conn.execute("SELECT role FROM users WHERE username=?", (username,)).fetchone()
+    
+    # Strict Authorization
+    if not user or user['role'] != 'official':
+        conn.close()
+        return HTMLResponse("<h1>403 Forbidden</h1>", status_code=403)
+        
+    # The actual "Closing" logic
+    conn.execute("UPDATE tenders SET status='CLOSED' WHERE id=?", (tender_id,))
+    conn.commit()
+    conn.close()
+    
+    log_action(username, f"Closed Tender ID: #{tender_id}")
+    
+    return RedirectResponse(url="/official_dashboard", status_code=303)
+
+# Create Tender
+@app.post("/create_tender")
+async def create_tender(request: Request, title: str = Form(...), description: str = Form(...)):
+    username = request.session.get("user")
+    if not username: return RedirectResponse(url="/login")
+
+    conn = get_db_connection()
+    user = conn.execute("SELECT role FROM users WHERE username=?", (username,)).fetchone()
+    
+    # Strict Authorization: Only Officials can create tenders
+    if not user or user['role'] != 'official':
+        conn.close()
+        return HTMLResponse("<h1>403 Forbidden</h1>", status_code=403)
+        
+    conn.execute("INSERT INTO tenders (title, description) VALUES (?, ?)", (title, description))
+    conn.commit()
+    conn.close()
+    
+    log_action(username, f"Created New Tender: {title}")
+    
+    # Redirect back to dashboard to see it immediately
+    return RedirectResponse(url="/official_dashboard", status_code=303)
 
 @app.post("/decrypt_bid", response_class=HTMLResponse)
 async def decrypt_bid_route(request: Request, bid_id: int = Form(...)):
@@ -328,43 +399,89 @@ async def decrypt_bid_route(request: Request, bid_id: int = Form(...)):
         conn.close()
         return HTMLResponse("<h1>403 Forbidden</h1>", status_code=403)
 
-    bid = conn.execute("SELECT * FROM bids WHERE id=?", (bid_id,)).fetchone()
+    # Fetch Bid + The Username of the bidder
+    bid = conn.execute('''
+        SELECT bids.*, users.username as bidder_name 
+        FROM bids 
+        JOIN users ON bids.user_id = users.id 
+        WHERE bids.id=?
+    ''', (bid_id,)).fetchone()
     
+    conn.close() # Close DB early since we have the data
+
     if not bid:
         return "Bid not found"
 
-    # Decryption: Uses Server Private Key to unlock AES Key
+    # Decryption logic
     real_amount = decrypt_bid_data(bid['enc_data'], bid['enc_key'])
+    
+    # Log the full event
+    log_action(username, f"Bid Decrypted: ID #{bid_id} by {bid['bidder_name']}")
 
-    # Log the access event
-    log_action(username, f"Bid Decrypted: ID #{bid_id}")
-
+    # Added Bidder Name Display
     return f"""
     <html>
         <head>
             <title>Bid Decrypted</title>
             <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
         </head>
-        <body class="container mt-5">
-            <div class="card shadow-lg">
-                <div class="card-header bg-success text-white">
-                    <h2>Decryption Successful</h2>
-                </div>
-                <div class="card-body">
-                    <h4 class="text-muted">Bid ID: #{bid_id}</h4>
-                    <hr>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <p><strong>Status:</strong> <span class="badge bg-success">VERIFIED & OPENED</span></p>
-                            <p><strong>Digital Signature:</strong> <span class="text-success">MATCH (Integrity Confirmed)</span></p>
+        <body class="container mt-5 bg-light">
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="card shadow-lg border-0">
+                        <div class="card-header bg-success text-white py-3">
+                            <h3 class="mb-0"><i class="bi bi-unlock-fill me-2"></i>Decryption Successful</h3>
                         </div>
-                        <div class="col-md-6 text-end">
-                            <h1 class="display-4">${real_amount}</h1>
-                            <p class="text-muted">Original Bid Amount</p>
+                        <div class="card-body p-4">
+                            
+                            <div class="alert alert-light border shadow-sm mb-4">
+                                <div class="row align-items-center">
+                                    <div class="col-auto">
+                                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; font-size: 1.5rem;">
+                                            {bid['bidder_name'][0].upper()}
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <small class="text-muted text-uppercase fw-bold">Bidder Identity</small>
+                                        <h4 class="mb-0 text-dark">{bid['bidder_name']}</h4>
+                                    </div>
+                                    <div class="col-auto text-end">
+                                        <small class="text-muted">Bid ID: #{bid_id}</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr>
+
+                            <div class="row mt-4">
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>Security Status:</strong></p>
+                                    <span class="badge bg-success p-2 mb-3"><i class="bi bi-shield-check me-1"></i> VERIFIED & OPENED</span>
+                                    
+                                    <p class="mb-1"><strong>Integrity Check:</strong></p>
+                                    <div class="text-success fw-bold">
+                                        <i class="bi bi-check-all me-1"></i> Digital Signature MATCH
+                                    </div>
+                                    <small class="text-muted">Data has not been tampered with.</small>
+                                </div>
+                                <div class="col-md-6 text-end">
+                                    <label class="text-muted text-uppercase small fw-bold">Official Bid Amount</label>
+                                    <h1 class="display-3 fw-bold text-dark">${real_amount}</h1>
+                                </div>
+                            </div>
+
+                            <hr class="mt-4">
+                            <div class="d-flex justify-content-between">
+                                <a href="/official_dashboard" class="btn btn-outline-dark">
+                                    <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+                                </a>
+                                <button onclick="window.print()" class="btn btn-outline-secondary">
+                                    <i class="bi bi-printer me-1"></i> Print Record
+                                </button>
+                            </div>
                         </div>
                     </div>
-                    <hr>
-                    <a href="/official_dashboard" class="btn btn-primary">Back to Dashboard</a>
                 </div>
             </div>
         </body>

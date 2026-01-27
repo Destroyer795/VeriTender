@@ -23,7 +23,6 @@
 
     {% if role == 'contractor' %}
     <div class="row">
-        <!-- Active Tenders Card -->
         <div class="col-md-6 mb-4 fade-in-up delay-1">
             <div class="card-modern h-100">
                 <div class="card-header-modern card-header-primary d-flex align-items-center justify-content-between">
@@ -33,75 +32,95 @@
                     <span class="badge bg-white text-primary" style="font-size: 0.7rem;">LIVE</span>
                 </div>
                 <div class="card-body-modern">
+                    {% for tender in tenders %}
                     <div class="d-flex align-items-start mb-3">
                         <div class="icon-wrapper icon-primary me-3">
                             <i class="bi bi-cone-striped"></i>
                         </div>
-                        <div>
-                            <h6 class="mb-1 fw-semibold">Road Construction Project - NH47</h6>
+                        <div class="w-100">
+                            <h6 class="mb-1 fw-semibold">{{ tender.title }}</h6>
+                            <p class="text-muted small mb-1">{{ tender.description }}</p>
                             <span class="badge-modern badge-success">
                                 <i class="bi bi-unlock me-1"></i>Open for Bidding
                             </span>
                         </div>
                     </div>
+                    {% if not loop.last %}<hr class="my-3">{% endif %}
+                    {% else %}
+                    <div class="text-center py-3">
+                        <p class="text-muted mb-0">No active tenders at the moment.</p>
+                    </div>
+                    {% endfor %}
+                    
                     <hr class="my-3">
                     <a href="/submit_bid" class="btn btn-modern-primary w-100">
-                        <i class="bi bi-lock me-2"></i>Submit Sealed Bid
+                        <i class="bi bi-lock me-2"></i>Go to Submission Page
                     </a>
                 </div>
             </div>
         </div>
 
-        <!-- Submission Receipt Card -->
         <div class="col-md-6 mb-4 fade-in-up delay-2">
             <div class="card-modern h-100">
                 <div class="card-header-modern card-header-success d-flex align-items-center justify-content-between">
                     <h5 class="mb-0 d-flex align-items-center">
-                        <i class="bi bi-check-circle me-2"></i>Submission Receipt
+                        <i class="bi bi-clock-history me-2"></i>Your Submissions
                     </h5>
-                    <span class="badge bg-white text-success" style="font-size: 0.7rem;">VERIFIED</span>
+                    <span class="badge bg-white text-success" style="font-size: 0.7rem;">
+                        {{ my_bids | length }} Bids
+                    </span>
                 </div>
                 <div class="card-body-modern">
+                    
                     {% if request.query_params.get('status') == 'bid_sealed' %}
                         <div class="alert-modern alert-success-modern mb-3">
-                            <i class="bi bi-shield-check me-2"></i>
-                            <strong>Bid successfully sealed & submitted!</strong>
+                            <i class="bi bi-check-circle-fill me-2"></i>
+                            <strong>New Bid Successfully Sealed!</strong>
+                        </div>
+                    {% endif %}
+
+                    {% if my_bids %}
+                        <div style="max-height: 350px; overflow-y: auto; padding-right: 5px;">
+                            {% for bid in my_bids %}
+                            <div class="card mb-3 border-0 shadow-sm" style="background: #f8fafc;">
+                                <div class="card-body p-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="badge bg-dark text-white">Bid #{{ bid.id }}</span>
+                                        <small class="text-muted">{{ bid.timestamp }}</small>
+                                    </div>
+                                    
+                                    <label class="small text-muted fw-bold mb-1">Digital Receipt:</label>
+                                    <div class="input-group input-group-sm mb-2">
+                                        <input type="text" class="form-control font-monospace text-success" 
+                                               value="{{ make_receipt(bid.id, user) }}" readonly>
+                                        <button class="btn btn-outline-secondary" onclick="copyReceipt(this)" title="Copy">
+                                            <i class="bi bi-clipboard"></i>
+                                        </button>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                         <span class="badge-modern badge-success" style="font-size: 0.7rem;">
+                                            <i class="bi bi-shield-lock-fill me-1"></i>Sealed
+                                         </span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
                         </div>
 
-                        <label class="form-label small text-muted fw-semibold mb-2">
-                            <i class="bi bi-fingerprint me-1"></i>Digital Proof of Submission
-                        </label>
-                        
-                        <div class="input-group mb-3">
-                            <input type="text" class="form-control font-monospace small" 
-                                   value="{{ receipt_string }}" 
-                                   id="receiptString" readonly
-                                   style="background: #f9fafb; color: #0f766e; font-size: 0.8rem;">
-                            <button class="btn btn-outline-secondary" onclick="copyReceipt()" title="Copy to clipboard">
-                                <i class="bi bi-clipboard"></i>
-                            </button>
-                        </div>
-                        
-                        <hr class="my-3">
-                        
-                        <form action="/decode_receipt" method="post" target="decode_frame">
-                            <input type="hidden" name="encoded_string" value="{{ receipt_string }}">
-                            <button type="submit" class="btn btn-outline-secondary w-100">
-                                <i class="bi bi-qr-code-scan me-2"></i>Verify Receipt Integrity
-                            </button>
+                        <hr>
+                        <p class="small text-muted mb-1"><i class="bi bi-qr-code-scan me-1"></i>Verify Any Receipt:</p>
+                        <form action="/decode_receipt" method="post" target="decode_frame" class="d-flex gap-2">
+                            <input type="text" name="encoded_string" class="form-control form-control-sm" placeholder="Paste receipt here..." required>
+                            <button type="submit" class="btn btn-sm btn-outline-dark">Verify</button>
                         </form>
-                        
-                        <iframe name="decode_frame" style="width:100%; height:60px; border:none; margin-top:10px; border-radius: 8px;"></iframe>
+                        <iframe name="decode_frame" style="width:100%; height:60px; border:none; margin-top:5px;"></iframe>
 
                     {% else %}
-                        <div class="text-center py-4">
+                        <div class="text-center py-5">
                             <div class="icon-wrapper icon-success mx-auto mb-3" style="width: 64px; height: 64px; font-size: 1.5rem;">
                                 <i class="bi bi-inbox"></i>
                             </div>
-                            <p class="text-muted mb-0">
-                                No bid submitted in this session yet.<br>
-                                <small>Submit a bid to see your receipt here.</small>
-                            </p>
+                            <p class="text-muted mb-0">No bids submitted yet.</p>
                         </div>
                     {% endif %}
                 </div>
@@ -163,13 +182,15 @@
 </div>
 
 <script>
-function copyReceipt() {
-    var copyText = document.getElementById("receiptString");
+function copyReceipt(btn) {
+    // Select the input field immediately preceding the clicked button
+    var copyText = btn.previousElementSibling;
+    
     copyText.select();
-    document.execCommand("copy");
+    copyText.setSelectionRange(0, 99999); /* For mobile devices */
+    navigator.clipboard.writeText(copyText.value);
     
     // Visual feedback
-    const btn = event.target.closest('button');
     const originalHTML = btn.innerHTML;
     btn.innerHTML = '<i class="bi bi-check"></i>';
     btn.classList.add('btn-success');
