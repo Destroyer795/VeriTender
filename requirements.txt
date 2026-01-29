@@ -4,7 +4,5 @@ python-multipart
 jinja2
 cryptography
 bcrypt
-qrcode
-pillow
 sqlalchemy
 itsdangerous

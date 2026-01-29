@@ -1,6 +1,6 @@
 import bcrypt
 
-# --- NIST SP 800-63-2 PASSWORD STORAGE ---
+# NIST SP 800-63-2 PASSWORD STORAGE
 
 def hash_password(password: str):
     """
