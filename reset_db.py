@@ -4,7 +4,7 @@ from seed import seed_data
 DB_NAME = "veritender.db"
 
 def reset_database():
-    # Delete the existing database file
+    """Deletes and re-initializes the database for clean testing/development."""
     if os.path.exists(DB_NAME):
         try:
             os.remove(DB_NAME)
@@ -13,9 +13,9 @@ def reset_database():
             print("❌ Error: Close the database (or stop the server) before resetting!")
             return
     else:
-        print("ℹ️  No existing database found.")
+        print("No existing database found.")
 
-    # Run the seed function to create tables and default users
+    # Re-create database with default users and tenders
     print("🌱 Initializing fresh database...")
     seed_data()
     print("✅ RESET COMPLETE. You can now run 'python main.py'")

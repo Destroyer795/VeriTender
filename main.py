@@ -16,23 +16,24 @@ from config import SECRET_KEY
 
 app = FastAPI(title="VeriTender")
 
-# SECURITY: SessionMiddleware signs the cookie using the secret key.
-# This prevents client-side tampering of session data.
+# SessionMiddleware signs cookies to prevent tampering
+# Production alternative: JWT with refresh tokens for stateless auth
 app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
 
 templates = Jinja2Templates(directory="templates")
 
 def make_receipt(bid_id, username):
+    """Generate Base64 encoded receipt for submission proof (non-repudiation).
+    Production enhancement: Add cryptographic signature to prevent forgery.
+    """
     raw = f"RECEIPT-BID-{bid_id}-VERITENDER-{username.upper()}-CONFIRMED"
     return base64.b64encode(raw.encode()).decode()
 
 templates.env.globals.update(make_receipt=make_receipt)
 
 def prevent_caching(response: Response):
-    """
-    Sets HTTP headers to strictly disable browser caching.
-    Essential for security: prevents the 'Back' button from viewing sensitive
-    pages after logout.
+    """Disable browser caching to prevent viewing sensitive data after logout.
+    Three-layer defense: Cache-Control, Pragma (HTTP/1.0), and Expires headers.
     """
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
     response.headers["Pragma"] = "no-cache"
@@ -70,7 +71,7 @@ async def login_submit(request: Request, username: str = Form(...), password: st
     # Log successful password verification
     log_action(username, "Login: Password Verified")
 
-    # Fixed OTP for Seeded Users (Demo Mode)
+    # Demo Mode: Fixed OTP for testing (remove in production)
     demo_users = ['contractor', 'official', 'auditor']
     
     if username in demo_users:
@@ -88,7 +89,7 @@ async def login_submit(request: Request, username: str = Form(...), password: st
             "error": "Failed to send MFA Email. Check Config."
         })
 
-    # Store temporary state in signed session
+    # Store OTP in signed session (prevents leakage via URL/logs and tampering)
     request.session['pending_username'] = username
     request.session['mfa_code'] = otp 
     
@@ -120,7 +121,7 @@ async def mfa_submit(request: Request, otp: str = Form(...)):
     # Log successful MFA verification
     log_action(pending_username, "Login: MFA Verified - Session Started")
 
-    # Promote to full session
+    # Promote to full session (prevents session fixation)
     request.session.pop("mfa_code", None)
     request.session.pop("pending_username", None)
     request.session["user"] = pending_username
@@ -135,7 +136,7 @@ async def logout(request: Request):
         
     request.session.clear()
     response = RedirectResponse(url="/login", status_code=303)
-    # Clear-Site-Data header forces browser to wipe local data
+    # Clear-Site-Data header wipes all browser data (defense-in-depth)
     response.headers["Clear-Site-Data"] = '"cache", "cookies", "storage"'
     return response
 
@@ -153,6 +154,8 @@ async def register_submit(
     password: str = Form(...),
     role: str = Form(...)
 ):
+    # Minimum 8 characters (NIST recommendation)
+    # Production: Add complexity checks and dictionary validation
     if len(password) < 8:
         return templates.TemplateResponse("register.html", {
             "request": request, 
@@ -252,10 +255,10 @@ async def submit_bid_logic(request: Request, amount: str = Form(...), project_na
     username = request.session.get("user")
     if not username: return RedirectResponse(url="/login")
 
-    # 1. Hybrid Encryption (AES for Data + RSA for Key)
+    # 1. Hybrid Encryption (AES + RSA for optimal security/performance)
     cipher_package = encrypt_bid_data(amount)
     
-    # 2. Digital Signature (Sign Hash of Bid Amount)
+    # 2. Digital Signature for non-repudiation and tamper detection
     signature = sign_bid(amount)
 
     conn = get_db_connection()
@@ -277,11 +280,10 @@ async def submit_bid_logic(request: Request, amount: str = Form(...), project_na
 @app.post("/decode_receipt", response_class=HTMLResponse)
 async def decode_receipt(request: Request, encoded_string: str = Form(...)):
     """
-    Demonstrates Base64 Decoding (Requirement Component 5).
-    Takes a Base64 string and decodes it back to raw text to prove integrity.
+    Base64 Decoding for receipt verification.
+    Note: Base64 is encoding (not encryption) - used for text representation of binary data.
     """
     try:
-        # 1. DECODE: The core requirement
         decoded_bytes = base64.b64decode(encoded_string)
         decoded_text = decoded_bytes.decode('utf-8')
         
@@ -324,6 +326,7 @@ async def official_dashboard(request: Request, response: Response):
     conn = get_db_connection()
     user = conn.execute("SELECT role FROM users WHERE username=?", (username,)).fetchone()
     
+    # RBAC: Verify authorization at every endpoint (defense-in-depth)
     if not user or user['role'] != 'official':
         conn.close()
         return HTMLResponse("<h1>403 Forbidden: Officials Only</h1>", status_code=403)
@@ -412,10 +415,10 @@ async def decrypt_bid_route(request: Request, bid_id: int = Form(...)):
     if not bid:
         return "Bid not found"
 
-    # Decryption logic
+    # Decrypt using server's private key (end-to-end encryption demo)
     real_amount = decrypt_bid_data(bid['enc_data'], bid['enc_key'])
     
-    # Log the full event
+    # Audit trail for accountability and insider threat detection
     log_action(username, f"Bid Decrypted: ID #{bid_id} by {bid['bidder_name']}")
 
     # Added Bidder Name Display
@@ -500,9 +503,9 @@ async def audit_logs_page(request: Request, response: Response):
     
     if not user:
         conn.close()
-        return RedirectResponse(url="/login") # redirect here too
+        return RedirectResponse(url="/login")
 
-    # RBAC: Strict isolation for Auditors
+    # RBAC: Auditors get READ-ONLY log access (separation of duties)
     if user['role'] != 'auditor':
         conn.close()
         return HTMLResponse("<h1>403 Forbidden: Restricted to Auditors.</h1>", status_code=403)

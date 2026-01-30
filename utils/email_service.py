@@ -3,14 +3,17 @@ from email.message import EmailMessage
 import random
 from config import EMAIL_ADDRESS, EMAIL_PASSWORD
 
+# Email-based OTP for Multi-Factor Authentication
+# Production alternative: TOTP (e.g., Google Authenticator) or push notifications
+
 def generate_otp():
-    """Generates a 6-digit numeric OTP."""
+    """Generates a 6-digit numeric OTP (1 million combinations)."""
     return str(random.randint(100000, 999999))
 
 def send_otp_email(to_email: str, otp: str):
     """
-    Sends the OTP to the user's email using Gmail SMTP.
-    Returns True if successful, False otherwise.
+    Sends OTP via Gmail SMTP with TLS encryption.
+    Uses SMTP_SSL (port 465) for implicit TLS from connection start.
     """
     msg = EmailMessage()
     msg.set_content(f"""
@@ -29,7 +32,7 @@ def send_otp_email(to_email: str, otp: str):
     msg['To'] = to_email
 
     try:
-        # Standard Gmail SMTP Configuration
+        # Gmail SMTP with SSL/TLS (port 465)
         with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
             smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
             smtp.send_message(msg)

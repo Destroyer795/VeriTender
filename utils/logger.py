@@ -1,9 +1,12 @@
 from database import get_db_connection
 
+# Immutable Audit Trail - append-only logging for compliance
+# No UPDATE/DELETE operations exist for audit_logs table (permanent record)
+
 def log_action(username: str, event: str):
     """
-    Records an event in the immutable audit log.
-    Usage: log_action("contractor_bob", "Submitted a bid")
+    Records security events in immutable audit log.
+    Production enhancement: Log signing, separate DB, automated backups.
     """
     try:
         conn = get_db_connection()

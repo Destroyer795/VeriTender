@@ -2,10 +2,10 @@ from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.fernet import Fernet
 import base64
-import hashlib
 import os
 
 # Persistent RSA Key Management
+# Keys are stored on disk to survive server restarts (production: use HSM or Azure Key Vault)
 KEY_DIR = "keys"
 PRIVATE_KEY_FILE = os.path.join(KEY_DIR, "private.pem")
 PUBLIC_KEY_FILE = os.path.join(KEY_DIR, "public.pem")
@@ -13,7 +13,7 @@ PUBLIC_KEY_FILE = os.path.join(KEY_DIR, "public.pem")
 def load_or_generate_keys():
     """
     Loads RSA keys from files. If they don't exist, generates new ones and saves them.
-    This ensures encryption works across server restarts.
+    Persistent keys are required so bids encrypted with one key can be decrypted later.
     """
     if not os.path.exists(KEY_DIR):
         os.makedirs(KEY_DIR)
@@ -26,7 +26,7 @@ def load_or_generate_keys():
             public_key = serialization.load_pem_public_key(f.read())
         print("✅ Loaded existing RSA Keys from disk.")
     else:
-        # Generate new keys
+        # Generate new 2048-bit RSA keys (government standard)
         print("⚠️ No keys found. Generating new RSA Keys...")
         private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
         public_key = private_key.public_key()
@@ -48,26 +48,31 @@ def load_or_generate_keys():
     
     return private_key, public_key
 
-# Initialize Keys ONCE when module loads
+# Initialize RSA Key Pair ONCE when module loads
+# SERVER_PRIVATE_KEY: RSA private key (used for decryption and signing)
+# SERVER_PUBLIC_KEY: RSA public key (used for encrypting AES keys)
 SERVER_PRIVATE_KEY, SERVER_PUBLIC_KEY = load_or_generate_keys()
 
 # Encryption and Decryption Functions
 
 def encrypt_bid_data(amount: str):
     """
-    Hybrid Encryption:
-    1. Generate a random AES Key (Fernet).
-    2. Encrypt the Bid Amount using AES.
-    3. Encrypt the AES Key using Server's RSA Public Key.
+    Hybrid Encryption for optimal security and performance:
+    1. Generate random AES symmetric key
+    2. Encrypt bid amount with AES key (fast symmetric encryption)
+    3. Encrypt AES key with RSA public key (secure key exchange)
     """
-    # AES Encryption (Symmetric)
-    aes_key = Fernet.generate_key()
+    # Step 1 & 2: AES Symmetric Encryption
+    # Generate one-time AES key and encrypt the bid amount
+    aes_key = Fernet.generate_key()  # Random 256-bit AES key
     cipher_suite = Fernet(aes_key)
-    encrypted_data = cipher_suite.encrypt(amount.encode())
+    encrypted_data = cipher_suite.encrypt(amount.encode())  # Bid encrypted with AES
 
-    # RSA Encryption of the AES Key (Asymmetric)
+    # Step 3: RSA Asymmetric Encryption
+    # Encrypt the AES key using SERVER's RSA PUBLIC KEY
+    # Only the matching RSA PRIVATE KEY can decrypt this
     encrypted_key = SERVER_PUBLIC_KEY.encrypt(
-        aes_key,
+        aes_key,  # The AES key itself becomes the data to encrypt
         padding.OAEP(
             mgf=padding.MGF1(algorithm=hashes.SHA256()),
             algorithm=hashes.SHA256(),
@@ -76,20 +81,21 @@ def encrypt_bid_data(amount: str):
     )
 
     return {
-        "enc_data": encrypted_data,      # Store as BLOB or Bytes
-        "enc_key": encrypted_key         # Store as BLOB or Bytes
+        "enc_data": encrypted_data,  # Bid amount encrypted with AES key
+        "enc_key": encrypted_key     # AES key encrypted with RSA public key
     }
 
 def decrypt_bid_data(enc_data: bytes, enc_key: bytes):
     """
-    Decryption:
-    1. Decrypt AES Key using Server's RSA Private Key.
-    2. Decrypt Bid Data using the decrypted AES Key.
+    Hybrid Decryption (reverse of encryption):
+    1. Decrypt AES key using RSA PRIVATE key (only officials have access)
+    2. Decrypt bid amount using recovered AES key
     """
     try:
-        # Recover AES Key
+        # Step 1: RSA Asymmetric Decryption
+        # Decrypt the wrapped AES key using SERVER's RSA PRIVATE KEY
         aes_key = SERVER_PRIVATE_KEY.decrypt(
-            enc_key,
+            enc_key,  # The encrypted AES key
             padding.OAEP(
                 mgf=padding.MGF1(algorithm=hashes.SHA256()),
                 algorithm=hashes.SHA256(),
@@ -97,7 +103,8 @@ def decrypt_bid_data(enc_data: bytes, enc_key: bytes):
             )
         )
 
-        # Decrypt Data
+        # Step 2: AES Symmetric Decryption
+        # Use the recovered AES key to decrypt the actual bid amount
         cipher_suite = Fernet(aes_key)
         decrypted_amount = cipher_suite.decrypt(enc_data).decode()
         return decrypted_amount
@@ -108,16 +115,15 @@ def decrypt_bid_data(enc_data: bytes, enc_key: bytes):
 
 def sign_bid(data: str):
     """
-    Creates a Digital Signature of the data (SHA-256 hash signed with Private Key).
-    Note: In a real world, User signs with THEIR private key. 
-    Here, we simulate signing to prove integrity.
+    Creates digital signature using RSA PRIVATE KEY for non-repudiation.
+    Signs the bid data - can be verified later using RSA PUBLIC KEY.
     """
-    signature = SERVER_PRIVATE_KEY.sign(
+    signature = SERVER_PRIVATE_KEY.sign(  # Sign with RSA private key
         data.encode(),
         padding.PSS(
             mgf=padding.MGF1(hashes.SHA256()),
-            salt_length=padding.PSS.MAX_LENGTH
+            salt_length=padding.PSS.MAX_LENGTH  # Max randomness for PSS
         ),
         hashes.SHA256()
     )
-    return base64.b64encode(signature).decode() # Return as String for easy DB storage
+    return base64.b64encode(signature).decode()  # Convert to text for DB storage

@@ -1,13 +1,15 @@
 from database import get_db_connection, init_db
 from utils.auth import hash_password
 
+# Creates initial test data with three RBAC roles for immediate testing
+# Production: Replace with proper user onboarding system
+
 def seed_data():
     init_db() # Ensure tables exist
     conn = get_db_connection()
     c = conn.cursor()
 
-    # TENDERS TABLE
-    # Stores the projects that contractors can bid on
+    # TENDERS TABLE - Projects for contractors to bid on
     c.execute('''
         CREATE TABLE IF NOT EXISTS tenders (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -18,8 +20,7 @@ def seed_data():
         )
     ''')
     
-    # Seed some dummy tenders if the table is empty
-    # This prevents duplicates if you run seed.py multiple times
+    # Seed initial tenders (idempotent - safe to run multiple times)
     check_tenders = c.execute("SELECT count(*) FROM tenders").fetchone()[0]
     if check_tenders == 0:
         c.execute("INSERT INTO tenders (title, description) VALUES ('City Road Repaving', 'Resurfacing of Main St and 1st Ave.')")
@@ -27,7 +28,7 @@ def seed_data():
         c.execute("INSERT INTO tenders (title, description) VALUES ('Smart Traffic Lights', 'Installation of AI traffic system in downtown.')")
         print("✅ Seeded initial tenders.")
 
-    # The 3 Roles required by the Rubric
+    # Three roles for RBAC demonstration
     users = [
         ("contractor", "contractor@example.com", "pass123", "contractor"),
         ("official", "official@gov.in", "admin123", "official"),
@@ -36,7 +37,6 @@ def seed_data():
 
     print("Seeding Users...")
     for username, email, pwd, role in users:
-        # Check if user exists to avoid crash
         exists = c.execute("SELECT 1 FROM users WHERE username=?", (username,)).fetchone()
         if not exists:
             hashed, salt = hash_password(pwd)
