@@ -79,6 +79,14 @@ Run the seed script to create the database and populate it with initial users.
 python seed.py
 ```
 
+**Note:** If you need to reset the database (clear all data and start fresh), use:
+
+```Bash
+python reset_db.py
+```
+
+This will delete the existing database and reinitialize it with default users.
+
 ### 6\. Run the Application
 
 ```Bash
@@ -159,5 +167,6 @@ VeriTender/
 ├── database.py             # SQLite connection
 ├── main.py                 # FastAPI application entry point
 ├── seed.py                 # Database initialization script
+├── reset_db.py             # Database reset utility
 └── requirements.txt        # Python dependencies
 ```

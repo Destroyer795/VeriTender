@@ -5,7 +5,7 @@ import base64
 import hashlib
 import os
 
-# PERSISTENT KEY MANAGEMENT
+# Persistent RSA Key Management
 KEY_DIR = "keys"
 PRIVATE_KEY_FILE = os.path.join(KEY_DIR, "private.pem")
 PUBLIC_KEY_FILE = os.path.join(KEY_DIR, "public.pem")
@@ -51,7 +51,7 @@ def load_or_generate_keys():
 # Initialize Keys ONCE when module loads
 SERVER_PRIVATE_KEY, SERVER_PUBLIC_KEY = load_or_generate_keys()
 
-# ENCRYPTION LOGIC
+# Encryption and Decryption Functions
 
 def encrypt_bid_data(amount: str):
     """
@@ -60,12 +60,12 @@ def encrypt_bid_data(amount: str):
     2. Encrypt the Bid Amount using AES.
     3. Encrypt the AES Key using Server's RSA Public Key.
     """
-    # 1. AES Encryption (Symmetric)
+    # AES Encryption (Symmetric)
     aes_key = Fernet.generate_key()
     cipher_suite = Fernet(aes_key)
     encrypted_data = cipher_suite.encrypt(amount.encode())
 
-    # 2. RSA Encryption of the AES Key (Asymmetric)
+    # RSA Encryption of the AES Key (Asymmetric)
     encrypted_key = SERVER_PUBLIC_KEY.encrypt(
         aes_key,
         padding.OAEP(
@@ -87,7 +87,7 @@ def decrypt_bid_data(enc_data: bytes, enc_key: bytes):
     2. Decrypt Bid Data using the decrypted AES Key.
     """
     try:
-        # 1. Recover AES Key
+        # Recover AES Key
         aes_key = SERVER_PRIVATE_KEY.decrypt(
             enc_key,
             padding.OAEP(
@@ -97,7 +97,7 @@ def decrypt_bid_data(enc_data: bytes, enc_key: bytes):
             )
         )
 
-        # 2. Decrypt Data
+        # Decrypt Data
         cipher_suite = Fernet(aes_key)
         decrypted_amount = cipher_suite.decrypt(enc_data).decode()
         return decrypted_amount

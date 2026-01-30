@@ -500,7 +500,7 @@ async def audit_logs_page(request: Request, response: Response):
     
     if not user:
         conn.close()
-        return RedirectResponse(url="/login") # Fixed missing redirect here too
+        return RedirectResponse(url="/login") # redirect here too
 
     # RBAC: Strict isolation for Auditors
     if user['role'] != 'auditor':
