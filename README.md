@@ -39,7 +39,7 @@ Installation and Setup
 ### 1\. Clone the Repository
 
 ```Bash
-git clone https://github.com/yourusername/VeriTender.git
+git clone https://github.com/Destroyer795/VeriTender.git
 cd veritender
 ```
 
