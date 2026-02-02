@@ -4,10 +4,10 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4 fade-in-up">
         <div>
-            <h2 class="fw-bold mb-1" style="color: #1e293b;">
+            <h3 class="page-title mb-1">
                 <i class="bi bi-bank me-2"></i>Official Tender Review
-            </h2>
-            <p class="text-muted mb-0">Manage government tenders and review bids</p>
+            </h3>
+            <p class="text-muted mb-0 small">Manage tenders and review bids</p>
         </div>
         <span class="badge-modern badge-danger">
             <i class="bi bi-shield-lock me-1"></i>Officials Only
@@ -16,19 +16,20 @@
 
     <div class="card-modern fade-in-up delay-1 mb-4">
         <div class="card-header-modern card-header-primary d-flex align-items-center justify-content-between">
-            <h5 class="mb-0">
+            <h6 class="mb-0">
                 <i class="bi bi-megaphone me-2"></i>Publish New Tender
-            </h5>
+            </h6>
         </div>
         <div class="card-body-modern">
             <form action="/create_tender" method="post" class="row g-3 align-items-end">
                 <div class="col-md-4">
-                    <label class="form-label small text-muted">Project Title</label>
+                    <label class="form-label small">Project Title</label>
                     <input type="text" name="title" class="form-control" placeholder="e.g. Highway Expansion" required>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label small text-muted">Short Description</label>
-                    <input type="text" name="description" class="form-control" placeholder="Brief details about the project..." required>
+                    <label class="form-label small">Description</label>
+                    <input type="text" name="description" class="form-control" placeholder="Brief project details..."
+                        required>
                 </div>
                 <div class="col-md-2">
                     <button type="submit" class="btn btn-modern-primary w-100">
@@ -41,9 +42,9 @@
 
     <div class="card-modern fade-in-up delay-1 mb-4">
         <div class="card-header-modern card-header-warning d-flex align-items-center justify-content-between">
-            <h5 class="mb-0">
-                <i class="bi bi-list-check me-2"></i>Manage Active Tenders
-            </h5>
+            <h6 class="mb-0">
+                <i class="bi bi-list-check me-2"></i>Active Tenders
+            </h6>
         </div>
         <div class="card-body-modern p-0">
             <div class="table-responsive">
@@ -51,7 +52,7 @@
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>Project Title</th>
+                            <th>Project</th>
                             <th>Status</th>
                             <th>Action</th>
                         </tr>
@@ -66,29 +67,29 @@
                             </td>
                             <td>
                                 {% if tender.status == 'OPEN' %}
-                                    <span class="badge-modern badge-success">Active</span>
+                                <span class="badge-modern badge-success">Active</span>
                                 {% else %}
-                                    <span class="badge-modern badge-danger">Closed</span>
+                                <span class="badge-modern badge-danger">Closed</span>
                                 {% endif %}
                             </td>
                             <td>
                                 {% if tender.status == 'OPEN' %}
-                                    <form action="/close_tender" method="post" class="d-inline">
-                                        <input type="hidden" name="tender_id" value="{{ tender.id }}">
-                                        <button type="submit" class="btn btn-sm btn-outline-danger">
-                                            <i class="bi bi-x-circle me-1"></i>Close Bidding
-                                        </button>
-                                    </form>
-                                {% else %}
-                                    <button class="btn btn-sm btn-secondary" disabled>
-                                        <i class="bi bi-lock-fill"></i> Locked
+                                <form action="/close_tender" method="post" class="d-inline">
+                                    <input type="hidden" name="tender_id" value="{{ tender.id }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-x-circle me-1"></i>Close
                                     </button>
+                                </form>
+                                {% else %}
+                                <button class="btn btn-sm btn-secondary" disabled>
+                                    <i class="bi bi-lock-fill"></i> Locked
+                                </button>
                                 {% endif %}
                             </td>
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="4" class="text-center py-4 text-muted">No tenders created yet.</td>
+                            <td colspan="4" class="text-center py-4 text-muted">No tenders created yet</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -99,10 +100,10 @@
 
     <div class="card-modern fade-in-up delay-2">
         <div class="card-header-modern card-header-dark d-flex align-items-center justify-content-between">
-            <h5 class="mb-0 d-flex align-items-center">
-                <i class="bi bi-inbox me-2"></i>Received Sealed Bids
-            </h5>
-            <span class="badge bg-light text-dark" style="font-size: 0.7rem;">
+            <h6 class="mb-0 d-flex align-items-center">
+                <i class="bi bi-inbox me-2"></i>Sealed Bids
+            </h6>
+            <span class="badge bg-light text-dark" style="font-size: 0.65rem;">
                 {{ bids | length }} Total
             </span>
         </div>
@@ -112,8 +113,8 @@
                     <thead>
                         <tr>
                             <th>Bid ID</th>
-                            <th>Bidder ID</th>
-                            <th>Submission Time</th>
+                            <th>Bidder</th>
+                            <th>Submitted</th>
                             <th>Status</th>
                             <th>Action</th>
                         </tr>
@@ -124,42 +125,44 @@
                             <td><span class="fw-semibold text-primary">#{{ bid.id }}</span></td>
                             <td>
                                 <div class="d-flex align-items-center">
-                                    <div class="icon-wrapper icon-primary me-2" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                                    <div class="icon-wrapper icon-primary me-2"
+                                        style="width: 28px; height: 28px; font-size: 0.75rem;">
                                         <i class="bi bi-person"></i>
                                     </div>
                                     <span>User {{ bid.user_id }}</span>
                                 </div>
                             </td>
-                            <td class="text-muted">{{ bid.timestamp }}</td>
+                            <td class="text-muted small">{{ bid.timestamp }}</td>
                             <td>
                                 {% if bid.status == 'OPENED' %}
-                                    <span class="badge-modern badge-success"><i class="bi bi-unlock me-1"></i>Decrypted</span>
+                                <span class="badge-modern badge-success"><i
+                                        class="bi bi-unlock me-1"></i>Decrypted</span>
                                 {% else %}
-                                    <span class="badge-modern badge-warning"><i class="bi bi-lock me-1"></i>Sealed</span>
+                                <span class="badge-modern badge-warning"><i class="bi bi-lock me-1"></i>Sealed</span>
                                 {% endif %}
                             </td>
                             <td>
                                 {% if bid.status == 'OPENED' %}
-                                    <form action="/decrypt_bid" method="post" class="d-inline">
-                                        <input type="hidden" name="bid_id" value="{{ bid.id }}">
-                                        <button type="submit" class="btn btn-outline-success btn-sm">
-                                            <i class="bi bi-eye me-1"></i>View Record
-                                        </button>
-                                    </form>
+                                <form action="/decrypt_bid" method="post" class="d-inline">
+                                    <input type="hidden" name="bid_id" value="{{ bid.id }}">
+                                    <button type="submit" class="btn btn-outline-success btn-sm">
+                                        <i class="bi bi-eye me-1"></i>View
+                                    </button>
+                                </form>
                                 {% else %}
-                                    <form action="/decrypt_bid" method="post" class="d-inline">
-                                        <input type="hidden" name="bid_id" value="{{ bid.id }}">
-                                        <button type="submit" class="btn btn-modern-danger btn-sm">
-                                            <i class="bi bi-key me-1"></i>Decrypt
-                                        </button>
-                                    </form>
+                                <form action="/decrypt_bid" method="post" class="d-inline">
+                                    <input type="hidden" name="bid_id" value="{{ bid.id }}">
+                                    <button type="submit" class="btn btn-modern-danger btn-sm">
+                                        <i class="bi bi-key me-1"></i>Decrypt
+                                    </button>
+                                </form>
                                 {% endif %}
                             </td>
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="5" class="text-center py-5">
-                                <p class="text-muted mb-0">No sealed bids received yet</p>
+                            <td colspan="5" class="text-center py-4">
+                                <p class="text-muted mb-0 small">No sealed bids received yet</p>
                             </td>
                         </tr>
                         {% endfor %}

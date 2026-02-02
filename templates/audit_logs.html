@@ -2,26 +2,24 @@
 
 {% block content %}
 <div class="container mt-4">
-    <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4 fade-in-up">
         <div>
-            <h2 class="fw-bold mb-1" style="color: #1e293b;">
-                <i class="bi bi-shield-exclamation me-2"></i>System Audit Logs
-            </h2>
-            <p class="text-muted mb-0">Complete immutable history of all system actions</p>
+            <h3 class="page-title mb-1">
+                <i class="bi bi-shield-exclamation me-2"></i>Audit Logs
+            </h3>
+            <p class="text-muted mb-0 small">Immutable history of all system actions</p>
         </div>
         <span class="badge-modern badge-danger">
-            <i class="bi bi-fingerprint me-1"></i>Immutable Records
+            <i class="bi bi-fingerprint me-1"></i>Immutable
         </span>
     </div>
 
-    <!-- Audit Logs Card -->
     <div class="card-modern fade-in-up delay-1">
         <div class="card-header-modern card-header-danger d-flex align-items-center justify-content-between">
-            <h5 class="mb-0 d-flex align-items-center">
+            <h6 class="mb-0 d-flex align-items-center">
                 <i class="bi bi-journal-text me-2"></i>Activity History
-            </h5>
-            <span class="badge bg-white text-danger" style="font-size: 0.7rem;">
+            </h6>
+            <span class="badge bg-white text-danger" style="font-size: 0.65rem;">
                 {{ logs | length }} Records
             </span>
         </div>
@@ -33,7 +31,7 @@
                             <th>Log ID</th>
                             <th>Timestamp</th>
                             <th>User</th>
-                            <th>Action Description</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -42,30 +40,33 @@
                             <td>
                                 <span class="fw-semibold text-danger">#{{ log.id }}</span>
                             </td>
-                            <td class="text-muted">
+                            <td class="text-muted small">
                                 <i class="bi bi-clock me-1"></i>{{ log.timestamp }}
                             </td>
                             <td>
                                 <div class="d-flex align-items-center">
-                                    <div class="icon-wrapper icon-primary me-2" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                                    <div class="icon-wrapper icon-primary me-2"
+                                        style="width: 28px; height: 28px; font-size: 0.7rem;">
                                         {{ log.username[0] | upper }}
                                     </div>
                                     <span class="fw-semibold">{{ log.username }}</span>
                                 </div>
                             </td>
                             <td>
-                                <code style="background: rgba(15, 118, 110, 0.1); color: #0f766e; padding: 0.25rem 0.5rem; border-radius: 6px; font-size: 0.85rem;">
+                                <code
+                                    style="background: rgba(13, 106, 98, 0.08); color: var(--primary-color); padding: 0.2rem 0.5rem; border-radius: 5px; font-size: 0.8rem;">
                                     {{ log.event }}
                                 </code>
                             </td>
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="4" class="text-center py-5">
-                                <div class="icon-wrapper icon-danger mx-auto mb-3" style="width: 64px; height: 64px; font-size: 1.5rem;">
+                            <td colspan="4" class="text-center py-4">
+                                <div class="icon-wrapper icon-danger mx-auto mb-2"
+                                    style="width: 48px; height: 48px; font-size: 1.2rem;">
                                     <i class="bi bi-inbox"></i>
                                 </div>
-                                <p class="text-muted mb-0">No audit logs available</p>
+                                <p class="text-muted mb-0 small">No audit logs available</p>
                             </td>
                         </tr>
                         {% endfor %}
@@ -73,9 +74,9 @@
                 </table>
             </div>
         </div>
-        <div class="card-footer bg-transparent text-center py-3" style="border-top: 1px solid var(--border-color);">
-            <span class="text-muted">
-                <i class="bi bi-person-badge me-1"></i>Report generated for Auditor: <strong>{{ user }}</strong>
+        <div class="card-footer bg-transparent text-center py-2" style="border-top: 1px solid var(--border-color);">
+            <span class="text-muted small">
+                <i class="bi bi-person-badge me-1"></i>Auditor: <strong>{{ user }}</strong>
             </span>
         </div>
     </div>

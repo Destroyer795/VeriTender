@@ -1,41 +1,37 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row justify-content-center mt-5">
-    <div class="col-md-5 col-lg-4">
+<div class="page-center">
+    <div class="col-11 col-sm-8 col-md-5 col-lg-4 col-xl-3">
         <div class="card-modern fade-in-up">
-            <div class="card-header-modern card-header-warning text-center">
-                <div class="icon-wrapper mx-auto mb-3" style="background: rgba(255,255,255,0.3); width: 56px; height: 56px;">
-                    <i class="bi bi-shield-shaded" style="font-size: 1.5rem; color: #92400e;"></i>
-                </div>
-                <h4 class="mb-1" style="color: #1a1a2e;">Verify Your Identity</h4>
-                <p class="mb-0" style="font-size: 0.9rem; color: #78350f;">Two-Factor Authentication</p>
+            <div class="card-header-modern card-header-warning text-center py-3">
+                <i class="bi bi-shield-shaded" style="font-size: 1.8rem; color: rgba(255,255,255,0.9);"></i>
+                <h5 class="mb-0 mt-2">Verify Identity</h5>
+                <p class="mb-0 mt-1 opacity-75" style="font-size: 0.8rem;">Two-Factor Authentication</p>
             </div>
             <div class="card-body-modern text-center">
                 <div class="mb-4">
-                    <div class="icon-wrapper icon-warning mx-auto mb-3" style="width: 64px; height: 64px; font-size: 1.5rem;">
+                    <div class="icon-wrapper icon-warning mx-auto mb-2"
+                        style="width: 48px; height: 48px; font-size: 1.2rem;">
                         <i class="bi bi-envelope-paper"></i>
                     </div>
-                    <p class="mb-1">We sent a 6-digit code to your email</p>
-                    <p class="text-muted small mb-0">
-                        <i class="bi bi-info-circle me-1"></i>Check your spam folder if you don't see it
-                    </p>
+                    <p class="mb-1" style="font-size: 0.9rem;">Enter the 6-digit code sent to your email</p>
                 </div>
-                
+
                 {% if error %}
-                <div class="alert-modern alert-danger-modern mb-4" role="alert">
+                <div class="alert-modern alert-danger-modern mb-3" role="alert">
                     <i class="bi bi-exclamation-triangle me-2"></i>{{ error }}
                 </div>
                 {% endif %}
 
                 <form action="/verify_mfa" method="post" autocomplete="off">
                     <div class="mb-4">
-                        <input type="text" class="form-control text-center fw-bold" 
-                               name="otp" placeholder="• • • • • •" maxlength="6" required autofocus
-                               style="font-size: 1.75rem; letter-spacing: 0.75rem; padding: 1rem; border-radius: 12px;">
+                        <input type="text" class="form-control text-center fw-bold" name="otp" placeholder="• • • • • •"
+                            maxlength="6" required autofocus
+                            style="font-size: 1.5rem; letter-spacing: 0.5rem; padding: 0.8rem;">
                     </div>
                     <div class="d-grid">
-                        <button type="submit" class="btn btn-modern-warning btn-lg" style="color: #1a1a2e;">
+                        <button type="submit" class="btn btn-modern-warning">
                             <i class="bi bi-check-circle me-2"></i>Verify & Sign In
                         </button>
                     </div>
