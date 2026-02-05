@@ -317,7 +317,7 @@ async def decode_receipt(request: Request, encoded_string: str = Form(...)):
 # OFFICIAL & AUDITOR ROUTES
 
 @app.get("/official_dashboard", response_class=HTMLResponse)
-async def official_dashboard(request: Request, response: Response):
+async def official_dashboard(request: Request, response: Response, q: str = None):
     prevent_caching(response)
 
     username = request.session.get("user")
@@ -326,25 +326,59 @@ async def official_dashboard(request: Request, response: Response):
     conn = get_db_connection()
     user = conn.execute("SELECT role FROM users WHERE username=?", (username,)).fetchone()
     
-    # RBAC: Verify authorization at every endpoint (defense-in-depth)
     if not user or user['role'] != 'official':
         conn.close()
         return HTMLResponse("<h1>403 Forbidden: Officials Only</h1>", status_code=403)
 
-    # Fetch Bids
-    bids = conn.execute("SELECT * FROM bids").fetchall()
+    search_msg = None
+    bids = []
+
+    # Search Functionality with Receipt Decoding
+    if q and q.strip():
+        q = q.strip()
+        bid_id_to_search = q 
+        
+        # Try to Decode Receipt
+        if len(q) > 10: 
+            try:
+                decoded_bytes = base64.b64decode(q)
+                decoded_text = decoded_bytes.decode('utf-8')
+                if "RECEIPT-BID-" in decoded_text:
+                    parts = decoded_text.split('-')
+                    bid_id_to_search = parts[2] 
+                    search_msg = f"✅ Valid Receipt Verified. Linked to Bid #{bid_id_to_search}"
+            except Exception:
+                pass 
+
+        # Query Database
+        bids = conn.execute("SELECT * FROM bids WHERE id=?", (bid_id_to_search,)).fetchall()
+        
+        # Logging the action
+        if bids:
+            # Log Success
+            log_action(username, f"Receipt Verification: SUCCESS for Bid #{bid_id_to_search}")
+        else:
+            # Log Failure (Crucial for detecting suspicious probing)
+            log_action(username, f"Receipt Verification: FAILED for query '{q}'")
+            
+            if not search_msg:
+                search_msg = f"❌ No bid found matching '{q}'"
+            elif search_msg:
+                 search_msg = f"❌ Receipt Valid, but Bid #{bid_id_to_search} was not found in DB."
+             
+    else:
+        bids = conn.execute("SELECT * FROM bids").fetchall()
     
-    # NEW: Fetch Tenders so Official can manage them
     tenders = conn.execute("SELECT * FROM tenders ORDER BY created_at DESC").fetchall()
-    
     conn.close()
 
     return templates.TemplateResponse("official_dashboard.html", {
         "request": request, 
         "user": username, 
         "bids": bids,
-        "tenders": tenders,  # Pass tenders to HTML
-        "role": user['role']
+        "tenders": tenders,
+        "role": user['role'],
+        "search_msg": search_msg 
     })
 
 @app.post("/close_tender")
